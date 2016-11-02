@@ -12,19 +12,32 @@
 //return to the spinning, which starts to slow down, this can go one of two ways 
 //either 
 
+var font1;
 //IMAGES
-var sky1; //stores sky bg image
 var stars;
+var plan1;
+var plan2;
+var sky1; //stores sky bg image
+var seed;
 //
+var starShow = [];
 var cloudCollage = []; //stores generated clouds
 var cloudArray = new Array(2); //stores cloud images
 var soilArray = new Array(3); //stores soil images
-var seed;
+
+//MVMT VARS
+var start1;
+var start2;
+var spin;
 
 //OTHER VARS
+var spark1;
+var fcount1 = 0;
+var fcount2 = 0;
+var fcount3 = 0; //frame count
+var startime = true;
 var plantSeed = false;
-var fcount = 0; //frame count
-var fcount2;
+var planetpass = false;
 var scene1 = true;
 var scene2 = false;
 var scene3 = false;
@@ -32,77 +45,117 @@ var t = 255; //transparency for soil
 var yseed = 100;
 
 function preload() {
-  for (var i = 1; i < 5; i++) {
-    soilArray[i] = loadImage('data/soil' + i + '.jpg');
-  }
-  for (var i = 1; i < 3; i++) {
-    cloudArray[i] = loadImage('data/clouds' + i + '.png');
-  }
-  stars = loadImage('data/stars1.jpg');
-  sky1 = loadImage('data/sky1.jpg');
-  skyhalf = loadImage('data/skyhalf.jpg');
-  seed = loadImage('data/seed.png');
+	for (var i = 1; i < 5; i++) {
+		soilArray[i] = loadImage('data/soil' + i + '.jpg');
+	}
+	for (var c = 1; c < 3; c++) {
+		cloudArray[c] = loadImage('data/clouds' + c + '.png');
+	}
+	stars = loadImage('data/stars1.jpg');
+	sky1 = loadImage('data/sky1.jpg');
+	skyhalf = loadImage('data/skyhalf.jpg');
+	seed = loadImage('data/seed.png');
+	plan1 = loadImage('data/planet1.png');
+	plan2 = loadImage('data/pluto1.png');
+	font1 = loadFont('data/font1.ttf');
 }
 
 function setup() {
-  createCanvas(900, 600);
-  background(0);
-  imageMode(CENTER); //so images can be rotated around center
+	start1 = 5 * PI / 4;
+	start2 = PI / 4;
+	createCanvas(700, 600);
+	background(0);
+	imageMode(CENTER); //so images can be rotated around center
+	for (var x = 0; x < width + 20; x += 20) {
+		for (var y = 0; y < height + 20; y += 20) {
+			spark = new Sparkle(x, y);
+			starShow.push(spark);
+		}
+	}
 }
 
 function draw() {
-  console.log(fcount);
-  console.log(yseed);
-  //first scene, two planets orbit near eachother
-  if (scene1 ===true){
-    image(stars, width/2, height/2, 900, 900); //space image covers entire screen
-    stars(createVector(mouseX, mouseY));
-  }
-  //scene of dirt on the ground, clouds go past, the user mouse controls a seed
-  //once the seed touches the dirt, scene shifts
-  if (scene2 === true) {
-    if (plantSeed === false) {
-      if (fcount < 80) {
-        tint(255, 80); //transparency for "trail" effect
-        //top half of bg is redrawn to animate clouds across screen
-        image(skyhalf, width / 2, height / 3, 900, 390);
-        cloudFunc();
-      }
-      if ((70 < fcount) && (fcount < 90)) {
-        for (var i = 1; i < 5; i++) {
-          drawdirt(i); //dirt is drawn as it cycles through array
-        }
-      }
-      if (fcount > 90) {
-        //a seed appears on screen after background generates
-        //if the mouse is over it, and u press, the seed moves to the dirt
-        image(seed, width / 2, yseed, 50, 50);
-        yseed += 10;
-        /*if ((mouseX > 425) & (mouseX < 475) & (mouseY > 75) & (mouseY < 125)) {
-          var sedPos = true;
-        }
-        */
-        background(0, map(yseed, 200, 500, 0, 255));
-      }
-      if (yseed > 460) {
-        plantSeed = true;
-      }
-      fcount++;
-    } else {
-      background(255);
-      background(0);
-      fcount2 = fcount;
-      scene2 = true;
-    }
-  }
-  if (scene3 === true) {
-    fcount2++;
-  }
-  if (fcount2 > 20) {
+	//two scenes alternate, plants moving through space & a seed(then tree) being grown in dirt in front of a blue sky and clouds
+	//what happens in each scene is relative to the other
+	//console.log(fcount);
+	//console.log(yseed);
+	//first scene, two planets orbit near eachother
+	if (scene1 === true) {
+		image(stars, width / 2, height / 2, width, height); //space image covers entire screen
+		for (var i = 1; i < starShow.length; i++) {
+			starShow[i].run(); //run every star in array
+		}
+		planets1(0, height / 2, plan1);
+		planets2(width, height / 2, plan2);
+		if (fcount1 > 50) {
+			textFont(font1);
+			textAlign(CENTER);
+			textSize(60);
+			text("the beginning", width / 2, height / 2);
+		}
 
-  }
+		if (fcount1 > 100) {
+			planetpass = true;
+		}
+		//test = new Sparkle(width/2, height/2);
+		//test.run();
+		//console.log(test.distance);
+		fcount1++;
+		console.log(fcount1);
+		if (planetpass === true) scene1 = false;
+	} //scene1
+
+	if (scene1 === false) scene2 = true;
+	//scene of dirt on the ground, clouds go past, the user mouse controls a seed
+	//once the seed touches the dirt, scene shifts
+	if (scene2 === true) {
+		if (plantSeed === false) {
+			if (fcount2 < 70) {
+				//top half of bg is redrawn to animate clouds across screen
+				cloudFunc();
+			}
+			if ((fcount2 > 50) && (fcount2 < 70)) {
+				tint(255, 40); //transparency for fade-in
+				image(skyhalf, width / 2, 195, width, 390);
+			}
+			if ((50 < fcount2) && (fcount2 < 80)) {
+				for (var l = 1; l < 5; l++) {
+					drawdirt(l); //dirt is drawn as it cycles through array
+				}
+			}
+			if (fcount2 > 80) {
+				//a seed appears on screen after background generates
+				//if the mouse is over it, and u press, the seed moves to the dirt
+				tint(255);
+				image(seed, width / 2, yseed, 50, 50);
+				yseed += 10;
+				/*if ((mouseX > 425) & (mouseX < 475) & (mouseY > 75) & (mouseY < 125)) {
+				  var sedPos = true;
+				}
+				*/
+				background(0, map(yseed, 380, 460, 0, 255));
+			}
+			if (yseed > 460) {
+				plantSeed = true;
+			}
+			fcount2++;
+		} else {
+			background(255);
+			background(0);
+			scene2 = false;
+			scene3 = true;
+		}
+	} //scene2
+	if (scene3 === true) {
+		console.log(fcount3);
+		fcount3++;
+	} //scene3
+
+	if (fcount3 > 20) {
+
+	}
+
 }
-
 
 /*function birds() {
   for (var i = 0; i < 5; i++) {
@@ -115,37 +168,61 @@ function draw() {
 }
 */
 
+//function planets creates one rotating planet at location put in parameters
+function planets1(Px, Py, plannum) {
+	//originally a class
+	/*planet1 = new Planet(Px, Py);
+	planet1.run();*/
+	spin = radians(2);
+	push();
+	translate(Px, Py);
+	rotate(start1);
+	image(plannum, 210, 210, 90, 90);
+	start1 += spin;
+	pop();
+	//console.log(rotation);
+}
+
+function planets2(Px, Py, plannum) {
+	//originally a class
+	/*planet1 = new Planet(Px, Py);
+	planet1.run();*/
+	spin = radians(2);
+	push();
+	translate(Px, Py);
+	rotate(start2);
+	image(plannum, 210, 210, 90, 90);
+	start2 += spin;
+	pop();
+	//console.log(rotation);
+}
+
 //generate clouds with cloud Class
 function cloudFunc() {
-  if (fcount < 600) {
-    i = new Clouds(createVector(random(0, 2 * width / 3), random(50, 170)));
-    cloudCollage.push(i);
-  }
-  for (var i = 0; i < cloudCollage.length; i += 30) {
-    cloudCollage[i].run();
-  }
+		i = new Clouds(createVector(random(width), random(0, 230)));
+		cloudCollage.push(i);
+	for (var i = 0; i < cloudCollage.length; i += 30) {
+		cloudCollage[i].run();
+	}
 }
 
 //generate dirt collage 
 function drawdirt(soilnum) { //paramaters passed to Array, determines value
-  push(); //push&pop for rotation
-  var soilpos = createVector(random(width), random(4 * height / 5, height));
-  translate(soilpos.x, soilpos.y); //translate so it rotates from center
-  rotate(random(PI / 6)); //random rotations
-  tint(255, t); //transparency set with var t
-  image(soilArray[soilnum], 0, 0, 150, 150);
-  pop();
-  t -= 1.0; //transparency decreases as more are drawn
+	push(); //push&pop for rotation
+	var soilpos = createVector(random(width), random(2 * height / 3, height));
+	translate(soilpos.x, soilpos.y); //translate so it rotates from center
+	rotate(random(PI / 6)); //random rotations
+	tint(255, t); //transparency set with var t
+	image(soilArray[soilnum], 0, 0, 150, 150);
+	pop();
+	t -= 1.0; //transparency decreases as more are drawn
 }
 
 //stars that get larger as they mousePos gets closer
-function stars(mousePos){
-  var starsize;
-  var star = createVector(random(width), random(height));
-  ellipse(star.x, star.y, starsize);
-  
+/*function starSpark(mousepos) {
+  //the starsize is going to be inverse to the difference between the star and mouse pos
+  for(var s = 0; s < starShow.length;s ++){
+    starShow[s].run();
+  }
 }
-
-function space() {
-
-}
+*/

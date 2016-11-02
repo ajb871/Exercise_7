@@ -1,7 +1,7 @@
 var Clouds = function(position){
   this.velocity = createVector(random(1, 3),0);
   this.pos = position.copy();
-  this.t = 255.0;
+  this.t = 0.0;
   
   this.run = function(){
     this.update();
@@ -15,7 +15,7 @@ var Clouds = function(position){
   
   this.update = function(){
     this.pos.add(this.velocity);
-    this.t -= 2.0;
+    this.t += 5.0;
   }
   
   //function to remove "dead" clouds, no real purpose
